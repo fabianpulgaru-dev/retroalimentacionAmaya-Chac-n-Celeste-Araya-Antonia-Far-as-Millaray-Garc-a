@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Retroalimentación · Uso de pantallas</title>
+<style>
+:root{--bg:#f6f5f8;--paper:#fff;--ink:#272239;--muted:#6f6978;--purple:#6e46b4;--green:#adc749;--mustard:#ecc759;--line:#e6e1eb;--soft:#faf8fc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.62}header{background:linear-gradient(135deg,#6e46b4,#845fc4);color:#fff;padding:28px 18px 24px}.wrap,main{max-width:920px;margin:auto}main{padding:16px 12px 80px}h1{font-size:1.6rem;line-height:1.2;margin:.25rem 0 .5rem}h2{font-size:1.18rem;margin:0 0 .45rem}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 14px}.good{border-left:6px solid var(--green)}.focus{border-left:6px solid var(--mustard)}.learn{border-left:6px solid var(--purple)}.muted{color:var(--muted)}.score{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.badge{background:rgba(255,255,255,.16);padding:7px 10px;border-radius:999px;font-weight:800;font-size:.83rem}.rubric{display:grid;grid-template-columns:1fr auto;gap:7px 14px}.rubric div{padding:6px 0;border-bottom:1px solid var(--line)}.route{display:grid;gap:8px;margin-top:10px}.route button{text-align:left;width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;font:inherit;font-weight:800;cursor:pointer}.panel{display:none;margin-top:10px}.panel.open{display:block}.step{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}.label{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;font-weight:900;color:#6e46b4;margin-bottom:4px}.quote{font-family:Georgia,"Times New Roman",serif;background:#fff;border-left:4px solid #c8b9e3;padding:10px 12px;border-radius:8px;margin:8px 0}.before,.after{padding:11px;border-radius:12px;border:1px solid var(--line);background:#fff;margin-top:8px}.after{background:#f7faec}.todo{background:#fff9e8;border:1px solid #eadca7;border-radius:12px;padding:11px;margin-top:10px}.doc{font-family:Georgia,"Times New Roman",serif;font-size:.96rem;line-height:1.75}.doc h3{font-family:Inter,system-ui,sans-serif;margin-top:18px}.doc p{white-space:pre-line}footer{color:var(--muted);font-size:.83rem;margin-top:22px}@media(max-width:600px){header{padding:22px 14px}main{padding:12px 9px 70px}.card{padding:14px;border-radius:15px}h1{font-size:1.35rem}}
+
+.route .panel{display:none}
+.route .panel.open{display:block}
+.route button{position:relative}
+.route button:after{content:"+";position:absolute;right:16px;font-size:1.15rem;color:#6e46b4}
+.route button.active:after{content:"−"}
+.step .quote{margin-top:8px}
+
+/* ===== Navegación por pantallas ===== */
+body.screen-open{overflow:hidden}
+.route-home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.route-card{
+  border:1px solid var(--border);background:#fff;border-radius:14px;padding:14px;
+  text-align:left;cursor:pointer;transition:.18s ease;min-height:92px
+}
+.route-card:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(72,49,104,.07)}
+.route-card b{display:block;margin-bottom:5px}
+.route-card span{font-size:.9rem;color:var(--muted)}
+.app-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:1000;display:none;
+  grid-template-rows:auto 1fr auto;
+}
+.app-screen.open{display:grid}
+.app-top{
+  background:#fff;border-bottom:1px solid var(--border);box-shadow:0 4px 16px rgba(72,49,104,.06);
+}
+.app-top-inner{max-width:980px;margin:auto;padding:10px 14px 8px}
+.app-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.back-home{
+  border:0;background:transparent;color:var(--purple);font-weight:900;cursor:pointer;padding:6px 0
+}
+.screen-title-mini{font-size:.82rem;font-weight:900;color:var(--ink)}
+.route-strip{
+  display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none
+}
+.route-strip::-webkit-scrollbar{display:none}
+.route-chip{
+  flex:0 0 auto;border:1px solid var(--border);background:#fff;color:var(--muted);
+  border-radius:999px;padding:7px 10px;font-size:.78rem;font-weight:900;cursor:pointer;
+}
+.route-chip.active{background:var(--purple);border-color:var(--purple);color:#fff}
+.app-main{min-height:0;overflow:auto;padding:14px}
+.screen-card{
+  max-width:980px;margin:auto;background:#fff;border:1px solid var(--border);border-radius:20px;
+  padding:20px;box-shadow:0 10px 28px rgba(72,49,104,.06)
+}
+.screen-card h2{margin-top:0}
+.screen-actions{
+  background:#fff;border-top:1px solid var(--border);padding:9px 10px calc(9px + env(safe-area-inset-bottom));
+}
+.screen-actions-inner{max-width:980px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.screen-actions button{
+  min-height:48px;border-radius:13px;border:1px solid var(--border);font-weight:900;cursor:pointer
+}
+.screen-actions .prev{background:#fff;color:var(--ink)}
+.screen-actions .next{background:var(--purple);border-color:var(--purple);color:#fff}
+.screen-actions button:disabled{opacity:.4;cursor:default}
+.lesson-block{margin:12px 0}
+.lesson-block .step{margin:10px 0}
+.example-stack{display:grid;gap:10px}
+.text-map{
+  font-size:1rem;line-height:1.75;background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px
+}
+.text-map p{margin:0 0 1rem}
+.hl{
+  cursor:pointer;border-radius:4px;padding:1px 2px;transition:.15s ease;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone
+}
+.hl:hover{filter:brightness(.97)}
+.hl1{background:#ece5ff;border-bottom:2px solid #6e46b4}
+.hl2{background:#fff0d0;border-bottom:2px solid #d2a838}
+.hl3{background:#eef7dd;border-bottom:2px solid #93ad36}
+.hl4{background:#eaf4ff;border-bottom:2px solid #5f97c8}
+.hl5{background:#ffeaf1;border-bottom:2px solid #c26b89}
+.highlight-legend{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}
+.legend-pill{font-size:.78rem;font-weight:900;border-radius:999px;padding:5px 8px}
+.feedback-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:1200;background:#fff;
+  border-top:1px solid var(--border);box-shadow:0 -12px 35px rgba(50,35,70,.18);
+  transform:translateY(105%);transition:transform .25s ease;
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+}
+.feedback-sheet.open{transform:translateY(0)}
+.sheet-inner{max-width:760px;margin:auto}
+.sheet-handle{width:44px;height:4px;border-radius:999px;background:#ddd4e8;margin:0 auto 10px}
+.sheet-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;font-weight:900;color:var(--purple)}
+.sheet-title{font-weight:900;font-size:1.05rem;margin:4px 0 7px}
+.sheet-actions{display:flex;gap:8px;margin-top:10px}
+.sheet-actions button{
+  flex:1;min-height:44px;border-radius:12px;border:1px solid var(--border);font-weight:900;cursor:pointer
+}
+.sheet-actions .related{background:var(--purple);color:#fff;border-color:var(--purple)}
+.sheet-actions .close-sheet{background:#fff}
+@media(max-width:700px){
+  .route-home-grid{grid-template-columns:1fr}
+  .screen-card{padding:15px;border-radius:16px}
+  .app-main{padding:9px}
+  .text-map{padding:14px;font-size:.94rem}
+  .route-card{min-height:auto}
+}
+
+
+/* ===== Mejora visual premium ===== */
+body{
+  background:
+    radial-gradient(circle at top left, rgba(110,70,180,.10), transparent 28%),
+    radial-gradient(circle at top right, rgba(173,199,73,.10), transparent 26%),
+    linear-gradient(180deg, #f6f3fb 0%, #f4f2f8 100%);
+}
+header{
+  background: linear-gradient(135deg, #6e46b4 0%, #8a67cc 100%);
+  color: #fff;
+  border-bottom: 0;
+  box-shadow: 0 14px 30px rgba(72,49,104,.18);
+}
+header .badge{
+  background: rgba(255,255,255,.14);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+.card{
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(72,49,104,.06);
+}
+.card.learn{
+  background: linear-gradient(180deg, #ffffff 0%, #fcfbfe 100%);
+}
+.route-home-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  margin-top:10px;
+}
+.route-card{
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:20px;
+  min-height:148px;
+  padding:16px 18px 18px;
+  text-align:left;
+  cursor:pointer;
+  background:#fff;
+  box-shadow:0 10px 26px rgba(72,49,104,.08);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.route-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 34px rgba(72,49,104,.12);
+  border-color:#cdbfe6;
+}
+.route-card:focus-visible{
+  outline:3px solid rgba(110,70,180,.22);
+  outline-offset:2px;
+}
+.route-card::before{
+  content:"";
+  position:absolute;
+  inset:auto -28px -28px auto;
+  width:112px;height:112px;border-radius:50%;
+  opacity:.22;
+}
+.route-c1::before{background:#cdbaf1}
+.route-c2::before{background:#f5d986}
+.route-c3::before{background:#cde3a7}
+.route-c4::before{background:#bfe0ff}
+.route-c5::before{background:#f7bfd0}
+.route-c6::before{background:#d7c7f1}
+.route-c7::before{background:#ffd8a6}
+.route-c8::before{background:#c6f0e5}
+.route-kicker{
+  display:inline-block;
+  margin-bottom:8px;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:.73rem;
+  font-weight:900;
+  letter-spacing:.03em;
+  background:#f3ecfb;
+  color:#6e46b4;
+}
+.route-card b{
+  display:block;
+  margin-bottom:7px;
+  font-size:1.12rem;
+  color:#23202b;
+}
+.route-desc{
+  display:block;
+  font-size:.93rem;
+  line-height:1.45;
+  color:#615b6c;
+  max-width:92%;
+}
+.route-arrow{
+  position:absolute;
+  left:18px;
+  bottom:16px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:.84rem;
+  font-weight:900;
+  color:#6e46b4;
+  background:#fff;
+  border:1px solid #e7e0f1;
+  border-radius:999px;
+  padding:7px 11px;
+  box-shadow:0 4px 12px rgba(72,49,104,.06);
+}
+.route-strip{
+  gap:8px;
+  padding-bottom:5px;
+}
+.route-chip{
+  background:#faf8fd;
+  color:#6b6573;
+  border:1px solid #e6dff1;
+  box-shadow:0 4px 10px rgba(72,49,104,.04);
+}
+.route-chip.active{
+  background:linear-gradient(135deg, #6e46b4 0%, #8a67cc 100%);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 8px 18px rgba(110,70,180,.22);
+}
+.back-home{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#f3ecfb;
+  padding:8px 12px;
+  border-radius:999px;
+  color:#6e46b4;
+}
+.screen-card{
+  border-radius:24px;
+  box-shadow:0 14px 36px rgba(72,49,104,.09);
+}
+.screen-actions .prev,
+#closeSheet{
+  background:#fff;
+  border:1px solid #ddd5e9;
+  box-shadow:0 4px 12px rgba(72,49,104,.05);
+}
+.screen-actions .next,
+#openRelated{
+  background:linear-gradient(135deg, #6e46b4 0%, #8a67cc 100%);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 10px 20px rgba(110,70,180,.22);
+}
+.feedback-sheet{
+  border-top-left-radius:22px;
+  border-top-right-radius:22px;
+}
+.sheet-title{
+  font-size:1.12rem;
+}
+.text-map{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.96)),
+    linear-gradient(180deg, #fff 0%, #fcfbfe 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+.highlight-legend{
+  gap:9px;
+}
+.legend-pill{
+  border:1px solid rgba(0,0,0,.05);
+  box-shadow:0 4px 10px rgba(72,49,104,.04);
+}
+@media(max-width:700px){
+  .route-home-grid{grid-template-columns:1fr}
+  .route-card{min-height:132px;border-radius:18px}
+  .route-card b{font-size:1.02rem}
+  .route-desc{max-width:100%;font-size:.9rem}
+  .route-arrow{bottom:14px;left:14px}
+}
+
+
+.route-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;min-height:190px;padding:16px 18px 16px}
+.route-card::before{z-index:0}
+.route-card>*{position:relative;z-index:1}
+.route-desc{display:block;margin-bottom:14px;max-width:90%;line-height:1.45}
+.route-arrow{position:static;margin-top:auto;display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:38px;padding:7px 11px}
+@media(max-width:700px){.route-card{min-height:170px}.route-desc{max-width:100%}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+<div style="font-weight:900;font-size:.78rem;letter-spacing:.05em">EXPRESIÓN ESCRITA II · RETROALIMENTACIÓN FORMATIVA</div>
+<h1>Uso de pantallas en la primera infancia</h1>
+<div>Evaluación 1 · Introducción y justificación del tema</div><div class="student-names" style="margin-top:10px;font-size:.95rem;line-height:1.45"><b>Estudiantes:</b> Carolina González · Amaya Chacón · Celeste Araya · Antonia Farías · Millaray García</div>
+<div class="score">
+<span class="badge">19 / 40 puntos</span><span class="badge">Nota 3,0</span><span class="badge">Exigencia 70%</span>
+</div>
+</div>
+</header>
+
+<main id="homeView">
+<section class="card good">
+<h2>Lo que ya están logrando</h2>
+<p>El tema es pertinente y actual para Educación Parvularia. Además, ya construyeron un párrafo que incorpora evidencia de UNICEF y de la Sociedad Chilena de Pediatría, interpreta esos antecedentes y vuelve al problema de investigación.</p>
+</section>
+
+<section class="card focus">
+<h2>El aprendizaje principal para esta revisión</h2>
+<p>Necesitan aprender a <b>organizar el problema, sostener cada afirmación con la evidencia que corresponde y hacer que cada dato cumpla una función</b>. Por eso esta retroalimentación utiliza varios ejemplos de su propio texto y una ruta más guiada para ayudarles a comprender qué necesitan revisar y cómo hacerlo.</p>
+</section>
+
+<section class="card">
+<h2>Resultado según la rúbrica</h2>
+
+<div class="rubric">
+<div><b>1. Pertinencia y actualidad del tema</b><br><span class="muted">El tema es actual y pertinente para Educación Parvularia. Además, incorporan antecedentes de UNICEF y de la Sociedad Chilena de Pediatría que permiten mostrar que la exposición temprana y prolongada a pantallas es un fenómeno vigente.</span></div><div><b>4/4</b></div>
+
+<div><b>2. Construcción del título</b><br><span class="muted">La entrega no presenta un título que permita identificar el tema, el foco específico de la investigación y un posicionamiento académico.</span></div><div><b>0/4</b></div>
+
+<div><b>3. Construcción de la introducción</b><br><span class="muted">Presentan el tema y comienzan a contextualizarlo, pero varias de las afirmaciones utilizadas para construir el problema no están respaldadas por fuentes. Por ejemplo, se afirma un “gran aumento” del uso de pantallas y se relaciona este uso con atención, autorregulación y lenguaje sin incorporar evidencia en esos fragmentos. Además, faltan referencias a documentos vinculados específicamente con Educación Parvularia y no se formula un objetivo explícito. El párrafo que incorpora UNICEF y la Sociedad Chilena de Pediatría sí entrega evidencia pertinente para contextualizar el problema, pero debería aparecer antes en la introducción.</span></div><div><b>1/4</b></div>
+
+<div><b>4. Construcción de la justificación</b><br><span class="muted">La justificación está incompleta. La tarea requería tres párrafos con razones diferentes, evidencia teórica e interpretación de esa evidencia. En la entrega no se desarrollan las tres razones y varias de las ideas que aparecen sobre juego, lenguaje, atención o sueño se presentan sin fuentes que las fundamenten.</span></div><div><b>1/4</b></div>
+
+<div><b>5. Uso de fuentes y APA 7</b><br><span class="muted">Reúnen varias fuentes en la bibliografía, pero no las integran de manera sistemática en el escrito. Algunas afirmaciones centrales no reconocen ninguna fuente y varias referencias finales no aparecen utilizadas en el cuerpo del texto. Además, la bibliografía necesita reconstruirse según APA 7.</span></div><div><b>1/4</b></div>
+
+<div><b>6. Recursos lingüísticos</b><br><span class="muted">Utilizan recursos propios de la introducción y la justificación, como “debido a”, “por ello”, “de acuerdo con”, “por su parte” y “estos antecedentes permiten sostener”. Sin embargo, no siempre están insertos en una estructura argumentativa completa y, en algunos casos, introducen una consecuencia o interpretación antes de presentar la evidencia necesaria.</span></div><div><b>2/4</b></div>
+
+<div><b>7. Lenguaje académico y cautela epistémica</b><br><span class="muted">Hay momentos de registro académico, pero también aparecen primera persona, expresiones imprecisas y afirmaciones demasiado categóricas, como “hemos notado”, “creemos”, “gran aumento” o “son producidos”. Necesitan ajustar el lenguaje al alcance real de la evidencia.</span></div><div><b>2/4</b></div>
+
+<div><b>8. Gramática y puntuación</b><br><span class="muted">La mayor parte del texto se comprende, aunque aparecen construcciones incompletas y algunas relaciones sintácticas necesitan reorganizarse. Un ejemplo es la oración que comienza con “El incremento de uso de teléfonos, tablets…”, donde se acumulan varias ideas sin completar claramente la relación entre ellas.</span></div><div><b>3/4</b></div>
+
+<div><b>9. Construcción de párrafos</b><br><span class="muted">Hay diferencias importantes entre los párrafos. Uno de ellos presenta antecedentes, incorpora fuentes y luego explica qué permiten sostener. En cambio, otros reúnen datos o afirmaciones sin explicar su función, como ocurre con el listado de caricaturas y contenidos.</span></div><div><b>3/4</b></div>
+
+<div><b>10. Aspectos formales</b><br><span class="muted">La entrega presenta una organización general reconocible, pero está incompleta, aparece el rótulo “Párrafo 2” sin desarrollo y la bibliografía necesita rehacerse según APA 7.</span></div><div><b>2/4</b></div>
+</div>
+
+</section>
+
+<section class="card good">
+<h2>Posibilidad de mejora mediante la reescritura</h2>
+<div class="rubric">
+<div>+1 punto</div><div><b>20/40 · 3,1</b></div>
+<div>+2 puntos</div><div><b>21/40 · 3,3</b></div>
+<div>+3 puntos</div><div><b>22/40 · 3,4</b></div>
+<div>+4 puntos</div><div><b>23/40 · 3,5</b></div>
+<div>+5 puntos</div><div><b>24/40 · 3,6</b></div>
+</div>
+</section>
+
+<section class="card learn">
+<h2>Ruta recomendada para revisar</h2><p class="muted">Cada tarjeta abre una pantalla propia. Pueden avanzar en orden, retroceder o saltar al aprendizaje que necesiten.</p>
+<p>Ahora cada aprendizaje se abre en una pantalla propia. Pueden seguir la ruta en orden o saltar directamente al aprendizaje que necesiten.</p>
+
+<div class="route-home-grid">
+  <button class="route-card route-c1" data-open-lesson="0">
+    <span class="route-kicker">Aprendizaje 1</span>
+    <b>Introducción</b>
+    <span class="route-desc">Construir una introducción que realmente conduzca al problema</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c2" data-open-lesson="1">
+    <span class="route-kicker">Aprendizaje 2</span>
+    <b>Evidencia</b>
+    <span class="route-desc">Sostener cada afirmación con la evidencia que corresponde</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c3" data-open-lesson="2">
+    <span class="route-kicker">Aprendizaje 3</span>
+    <b>Dato y evidencia</b>
+    <span class="route-desc">Distinguir entre dato, observación y evidencia académica</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c4" data-open-lesson="3">
+    <span class="route-kicker">Aprendizaje 4</span>
+    <b>Párrafos</b>
+    <span class="route-desc">Construir un párrafo como una unidad de significado</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c5" data-open-lesson="4">
+    <span class="route-kicker">Aprendizaje 5</span>
+    <b>Tres razones</b>
+    <span class="route-desc">Construir tres razones realmente diferentes en la justificación</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c6" data-open-lesson="5">
+    <span class="route-kicker">Aprendizaje 6</span>
+    <b>Lenguaje académico</b>
+    <span class="route-desc">Usar lenguaje académico y cautela sin perder claridad</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c7" data-open-lesson="6">
+    <span class="route-kicker">Aprendizaje 7</span>
+    <b>APA</b>
+    <span class="route-desc">Revisar APA como un sistema de citas y referencias</span>
+    <span class="route-arrow">Abrir ruta →</span>
+  </button>
+  <button class="route-card route-c8" data-open-text>
+    <span class="route-kicker">Pantalla complementaria</span>
+    <b>Texto comentado</b>
+    <span class="route-desc">Lean su propio texto con las retroalimentaciones destacadas y conectadas con la ruta</span>
+    <span class="route-arrow">Abrir texto →</span>
+  </button>
+</div>
+</section>
+
+
+<section class="card good">
+<h2>Para seguir avanzando</h2>
+<p>Este trabajo necesita una reescritura importante, pero no parte de cero. La meta es transferir al resto del texto una secuencia que ya aparece en uno de sus párrafos: evidencia, interpretación y regreso al problema.</p>
+</section>
+<footer>Retroalimentación formativa · Expresión Escrita II</footer>
+</main>
+
+<div class="app-screen" id="appScreen">
+  <div class="app-top">
+    <div class="app-top-inner">
+      <div class="app-topline">
+        <button class="back-home" id="backHome">← Volver a la ruta</button>
+        <div class="screen-title-mini" id="screenMiniTitle"></div>
+      </div>
+      <div class="route-strip"><button class="route-chip" data-screen="0">1. Introducción</button><button class="route-chip" data-screen="1">2. Evidencia</button><button class="route-chip" data-screen="2">3. Dato y evidencia</button><button class="route-chip" data-screen="3">4. Párrafos</button><button class="route-chip" data-screen="4">5. Tres razones</button><button class="route-chip" data-screen="5">6. Lenguaje académico</button><button class="route-chip" data-screen="6">7. APA</button><button class="route-chip" data-screen="7">8. Texto comentado</button></div>
+    </div>
+  </div>
+
+  <div class="app-main">
+    
+    <section class="lesson-screen" data-screen-index="0">
+      <div class="screen-card">
+        <h2>1. Construir una introducción que realmente conduzca al problema</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>Ya tienen un párrafo que sí cumple una función académica clara. Cuando incorporan datos de UNICEF y de la Sociedad Chilena de Pediatría, muestran que el fenómeno es actual, citan evidencia y vuelven al foco de atención y autorregulación.</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>Una introducción funciona como una ruta. Primero muestra un fenómeno actual. Después presenta evidencia que permita reconocerlo. Luego delimita qué parte de ese fenómeno será investigada. Finalmente formula el objetivo.</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«En el desarrollo de la primera infancia, hemos notado un gran aumento en el uso de pantallas...»</div>
+        <p>Parte desde una percepción personal. El lector todavía no sabe qué fuente permite sostener ese aumento.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Este fenómeno adquiere especial relevancia (...) se desarrollan habilidades fundamentales como la atención, la autorregulación, el lenguaje...»</div>
+        <p>La idea es pertinente, pero falta explicar con evidencia cómo se desarrollan estas habilidades y por qué el uso de pantallas se relaciona con ellas.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«De acuerdo con la UNICEF (2021), más del 60% de los niños y niñas menores de 3 años usan pantallas todos los días...»</div>
+        <p>Este fragmento sí sirve para contextualizar porque presenta un antecedente y lo vincula con el problema.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«Creemos que es muy importante investigar el uso de pantallas...»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«El uso de pantallas durante la primera infancia constituye un fenómeno relevante de investigar debido al aumento de la exposición temprana y prolongada. De acuerdo con UNICEF (2021), una proporción importante de niños y niñas menores de tres años utiliza pantallas diariamente. Estos antecedentes permiten observar que el fenómeno forma parte de las rutinas infantiles y justifican analizar cómo puede relacionarse con procesos como la atención y la autorregulación. El objetivo de esta investigación es analizar esa relación en niños y niñas de 0 a 6 años.»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>En su Word, muevan el párrafo de UNICEF y de la Sociedad Chilena de Pediatría hacia el inicio. Luego escriban una oración que comience con «Estos antecedentes permiten observar que...» y terminen con «El objetivo de esta investigación es...».</div>
+      </div>
+    </section>
+    
+    <section class="lesson-screen" data-screen-index="1">
+      <div class="screen-card">
+        <h2>2. Sostener cada afirmación con la evidencia que corresponde</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>Ustedes ya reconocen problemas posibles relacionados con el uso de pantallas. El siguiente paso es aprender a distinguir qué pueden afirmar con seguridad y qué necesita una fuente específica.</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>Cada afirmación importante debe tener una fuente pertinente. Una fuente sobre aumento de uso de pantallas no necesariamente sirve para sostener efectos en el lenguaje. Una fuente sobre sueño tampoco demuestra efectos en la autorregulación.</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«...es posible observar un gran aumento en los problemas cognitivos...»</div>
+        <p>Se afirma un aumento, pero no se cita una investigación que lo demuestre.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«...problemas con el desarrollo del lenguaje, los cuales son producidos por la exposición a las pantallas.»</div>
+        <p>Aquí se afirma causalidad. «Son producidos» exige evidencia fuerte.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Además, una exposición excesiva a las pantallas puede desplazar actividades fundamentales...»</div>
+        <p>Es una afirmación distinta y necesita una fuente específica.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«También puede relacionarse con dificultades en los hábitos de sueño...»</div>
+        <p>Necesita su propia evidencia.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«...problemas con el desarrollo del lenguaje, los cuales son producidos por la exposición a las pantallas.»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«De acuerdo con [fuente], una exposición prolongada a pantallas puede asociarse con dificultades en el desarrollo del lenguaje.»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>Busquen «aumenta», «produce», «provoca», «desplaza» o «se relaciona con». Al lado escriban qué fuente respalda esa afirmación. Si no tienen una fuente, todavía no pueden presentarla así.</div>
+      </div>
+    </section>
+    
+    <section class="lesson-screen" data-screen-index="2">
+      <div class="screen-card">
+        <h2>3. Distinguir entre dato, observación y evidencia académica</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>La búsqueda en foros y las preguntas a tutores muestran que intentaron acercarse a situaciones reales. Eso puede servir para generar preguntas, pero todavía necesitan decidir qué lugar ocupa esa información en un texto académico.</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>Un dato se vuelve útil cuando cumple una función. Después de incorporarlo, deberían poder completar «Esto demuestra que...» o «Este antecedente permite comprender que...».</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Luego de investigar en foros de internet, encontramos que la principal función (...) es tranquilizar a los niños...»</div>
+        <p>Proviene de una búsqueda informal y no puede utilizarse igual que una investigación académica.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«En primer lugar tenemos a las caricaturas (...) Bluey, Patrulla Canina...»</div>
+        <p>La lista entrega información, pero no explica qué demuestra.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«En segundo lugar se posiciona Disney...»</div>
+        <p>El lector sigue sin saber qué relación tiene con atención, autorregulación o lenguaje.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«Entre los contenidos mencionados aparecen Bluey, Frozen y Patrulla Canina.»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«Según [fuente], el uso frecuente de pantallas como estrategia para entretener o regular a niños pequeños puede desplazar otras formas de interacción. Este antecedente resulta relevante porque...»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>Para cada dato escriban «Esto demuestra que...». Si no pueden completar la frase, decidan si necesitan una fuente académica, una explicación o si conviene eliminarlo.</div>
+      </div>
+    </section>
+    
+    <section class="lesson-screen" data-screen-index="3">
+      <div class="screen-card">
+        <h2>4. Construir un párrafo como una unidad de significado</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>El último párrafo de la primera página es su mejor ejemplo. Allí presentan una idea, incorporan dos fuentes y luego explican qué permiten sostener esos antecedentes.</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>Un párrafo académico desarrolla una idea central. Para esta evaluación pueden pensar cada párrafo de justificación con cuatro movimientos: razón → evidencia → interpretación → cierre.</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«De acuerdo con la UNICEF (2021)... Por su parte, la Sociedad Chilena de Pediatría (2023)... Estos antecedentes permiten sostener que...»</div>
+        <p>Aquí sí hay evidencia e interpretación.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«El incremento de uso de teléfonos, tablets, televisores y consolas (...) objetos de estimulación rápida...»</div>
+        <p>Aquí aparecen varias ideas dentro de una oración incompleta.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Al haber un incremento en el uso de pantallas, es posible observar un gran aumento...»</div>
+        <p>El párrafo salta directamente a una conclusión.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«Al haber un incremento en el uso de pantallas, es posible observar un gran aumento en los problemas cognitivos...»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«Una razón para investigar el uso de pantallas durante la primera infancia es su posible relación con procesos de atención y autorregulación. De acuerdo con [fuente], una mayor exposición puede asociarse con dificultades en estos procesos. Este antecedente permite observar que el tiempo frente a pantallas podría relacionarse con dimensiones relevantes para la participación y el aprendizaje. Por ello, resulta pertinente investigar esta relación en niños y niñas de 0 a 6 años.»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>Tomen cada párrafo y escriban al margen «Este párrafo trata de...». Si necesitan más de una idea para completar esa frase, probablemente están mezclando razones.</div>
+      </div>
+    </section>
+    
+    <section class="lesson-screen" data-screen-index="4">
+      <div class="screen-card">
+        <h2>5. Construir tres razones realmente diferentes en la justificación</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>Ya tienen una razón que puede desarrollarse con claridad: la exposición temprana y prolongada a pantallas. Lo que falta es construir otras dos razones diferentes.</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>Justificar no significa repetir tres veces que el tema es importante. Cada párrafo debe responder de manera distinta a «¿por qué vale la pena investigar esto?».</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«...cada vez más pequeños están expuestos a dispositivos desde edades muy tempranas...»</div>
+        <p>Puede ser una razón centrada en la magnitud y actualidad del fenómeno.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«...puede desplazar actividades fundamentales para el desarrollo infantil...»</div>
+        <p>Puede convertirse en una razón sobre desplazamiento de experiencias.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«...falta de autorregulación, problemas de atención...»</div>
+        <p>Puede convertirse en una razón sobre procesos del desarrollo.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«Párrafo 2»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«Razón 2: posible desplazamiento de experiencias de juego e interacción. Fuente: [fuente]. Evidencia: [dato o resultado]. Interpretación: [qué demuestra]. Cierre: [por qué vuelve relevante investigar].»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>Antes de escribir los párrafos 2 y 3, completen tres fichas: razón, fuente, evidencia, qué demuestra y cierre.</div>
+      </div>
+    </section>
+    
+    <section class="lesson-screen" data-screen-index="5">
+      <div class="screen-card">
+        <h2>6. Usar lenguaje académico y cautela sin perder claridad</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>En varios momentos utilizan expresiones adecuadas como «resulta importante», «de acuerdo con» y «estos antecedentes permiten sostener».</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>El lenguaje académico no significa escribir difícil. Significa escribir con precisión y mostrar exactamente qué permite sostener la evidencia.</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«hemos notado un gran aumento...»</div>
+        <p>«Hemos notado» presenta una percepción personal y «gran» es impreciso sin dato.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Creemos que es muy importante investigar...»</div>
+        <p>La importancia debe fundamentarse en antecedentes, no en una valoración personal.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«algo que está pasando realmente y de forma masiva»</div>
+        <p>Puede expresarse con mayor precisión usando datos.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«son producidos por la exposición a las pantallas»</div>
+        <p>Es demasiado categórico para una relación no demostrada como causal.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«Creemos que es muy importante investigar...»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«Resulta pertinente investigar...»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>Busquen «hemos notado», «encontramos», «logramos notar», «creemos», «gran», «muy» y «realmente». Decidan si necesitan una fuente, precisión o eliminar la valoración.</div>
+      </div>
+    </section>
+    
+    <section class="lesson-screen" data-screen-index="6">
+      <div class="screen-card">
+        <h2>7. Revisar APA como un sistema de citas y referencias</h2>
+        <div class="step"><div class="label">Qué ya están logrando</div><p>Reunieron varias fuentes académicas e institucionales. Hay una base suficiente para fortalecer el trabajo si ordenan su uso.</p></div>
+        <div class="step"><div class="label">Qué necesitan aprender</div><p>APA funciona como un sistema. La cita permite saber de dónde viene una idea dentro del texto. La referencia final permite localizar la fuente. Las dos partes deben corresponderse.</p></div>
+        <div class="example-stack"><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«De acuerdo con la UNICEF (2021)...»</div>
+        <p>Aquí sí aparece una cita dentro del texto.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Sociedad Chilena de Pediatría (2023) indica que...»</div>
+        <p>Aquí también hay una fuente reconocible.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Christakis, D. A. (2009)...» en la bibliografía</div>
+        <p>La referencia aparece al final, pero no se ve utilizada en el cuerpo.</p>
+        </div><div class="step">
+        <div class="label">Ejemplo de su texto</div>
+        <div class="quote">«Lillard, A. S., y Peterson, J. (2011)...» en la bibliografía</div>
+        <p>Ocurre el mismo problema.</p>
+        </div></div>
+        <div class="step model">
+          <div class="label">Modelo · resolvemos un caso</div>
+          <div class="before"><b>Antes · en su texto</b><br>«-Fondo de las Naciones Unidas para la Infancia (2021). El Estado Mundial de la Infancia 2021...»</div>
+          <div class="after"><b>Después · una posible versión revisada</b><br>«[Volver a la fuente original y construir la referencia completa según el tipo de documento y APA 7].»</div>
+        </div>
+        <div class="todo"><b>Ahora les toca a ustedes</b><br>Marquen con ✔ cada referencia final que encuentren citada en el cuerpo. Luego hagan el camino inverso y busquen afirmaciones importantes que todavía no tienen cita.</div>
+      </div>
+    </section>
+    
+<section class="lesson-screen text-screen" data-screen-index="7">
+  <div class="screen-card">
+    <h2>8. Texto comentado</h2>
+    <p class="muted">Las partes destacadas se conectan con los aprendizajes de la ruta. Toquen cualquier fragmento coloreado para abrir una retroalimentación breve.</p>
+    <div class="highlight-legend">
+      <span class="legend-pill hl1">Introducción / lenguaje</span>
+      <span class="legend-pill hl2">Evidencia necesaria</span>
+      <span class="legend-pill hl3">Dato y función</span>
+      <span class="legend-pill hl4">Organización</span>
+      <span class="legend-pill hl5">Cautela / precisión</span>
+    </div>
+    <div class="text-map">
+<p><span class="hl hl1" data-feedback="h1">En el desarrollo de la primera infancia, hemos notado un gran aumento en el uso de pantallas en niños y niñas de entre 0 a 6 años.</span> 
+<span class="hl hl2" data-feedback="h2">Este fenómeno adquiere especial relevancia durante la primera infancia, debido a que en esta etapa se desarrollan habilidades fundamentales como la atención, la autorregulación, el lenguaje y la capacidad de interactuar con otras personas.</span> Por ello, resulta importante comprender de qué manera el tiempo destinado al uso de pantallas puede relacionarse con estas áreas del desarrollo infantil.</p>
+
+<p>El incremento de uso de teléfonos, tablets, televisores y consolas de videojuegos en párvulos, las cuales son utilizadas como objetos de estimulación rápida y grandes generadores de dopamina en los párvulos. 
+<span class="hl hl3" data-feedback="h3">Luego de investigar en foros de internet, encontramos que la principal función para las que estas son utilizadas, son con el fin de tranquilizar a los niños cuando los padres están ocupados.</span> 
+<span class="hl hl4" data-feedback="h4">A su vez, preguntamos a tutores de infantes sobre qué contenido dejan que sus hijos vean, los cuales dividimos en categorías. En primer lugar tenemos a las caricaturas, como lo son Bluey, Patrulla Canina, Gaby: La casa de muñecas, Octonautas, entre otras. En segundo lugar se posiciona Disney...</span></p>
+
+<p>Al haber un incremento en el uso de pantallas, es posible observar un gran aumento en los problemas cognitivos en los niños y niñas de Educación Parvularia, disminución del juego y problemas con el desarrollo lingüístico. En cuanto al desarrollo cognitivo, logramos notar una falta de autorregulación, problemas de atención en los niños y niñas, <span class="hl hl5" data-feedback="h5">problemas con el desarrollo del lenguaje, los cuales son producidos por la exposición a las pantallas.</span></p>
+
+<p><span class="hl hl2" data-feedback="h6">Además, una exposición excesiva a las pantallas puede desplazar actividades fundamentales para el desarrollo infantil, como el juego activo, la interacción con pares y adultos, la exploración del entorno y la realización de actividades que favorecen la creatividad. También puede relacionarse con dificultades en los hábitos de sueño</span> y con una menor participación en experiencias sociales y aspectos relevantes para el desarrollo integral durante la primera infancia.</p>
+
+<p><span class="hl hl3" data-feedback="h7">Creemos que es muy importante investigar el uso de pantallas en niños y niñas de 0 a 6 años, porque cada vez más pequeños están expuestos a dispositivos desde edades muy tempranas y por tiempos bastante largos. De acuerdo con la UNICEF (2021), más del 60% de los niños y niñas menores de 3 años usan pantallas todos los días, y en Chile el tiempo promedio supera las 2 horas diarias, lo que está muy por encima de lo que recomienda la OMS. Por su parte, la Sociedad Chilena de Pediatría (2023) indica que esta situación aumentó mucho después de la pandemia...</span> 
+Estos antecedentes permiten sostener que la exposición temprana y prolongada a pantallas es <span class="hl hl5" data-feedback="h8">algo que está pasando realmente y de forma masiva</span>, por lo que es necesario investigar cómo todo esto se relaciona con la atención y la autorregulación en la primera infancia.</p>
+</div>
+  </div>
+</section>
+
+  </div>
+
+  <div class="screen-actions">
+    <div class="screen-actions-inner">
+      <button class="prev" id="prevScreen">← Anterior</button>
+      <button class="next" id="nextScreen">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<div class="feedback-sheet" id="feedbackSheet" aria-hidden="true">
+  <div class="sheet-inner">
+    <div class="sheet-handle"></div>
+    <div class="sheet-label">Retroalimentación conectada</div>
+    <div class="sheet-title" id="sheetTitle"></div>
+    <div id="sheetText"></div>
+    <div class="sheet-actions">
+      <button class="close-sheet" id="closeSheet">Cerrar</button>
+      <button class="related" id="openRelated">Ver aprendizaje relacionado</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const app=document.getElementById('appScreen');
+  const screens=[...document.querySelectorAll('.lesson-screen')];
+  const chips=[...document.querySelectorAll('.route-chip')];
+  const homeButtons=[...document.querySelectorAll('[data-open-lesson]')];
+  const textButton=document.querySelector('[data-open-text]');
+  const prev=document.getElementById('prevScreen');
+  const next=document.getElementById('nextScreen');
+  const back=document.getElementById('backHome');
+  const mini=document.getElementById('screenMiniTitle');
+  const sheet=document.getElementById('feedbackSheet');
+  const sheetTitle=document.getElementById('sheetTitle');
+  const sheetText=document.getElementById('sheetText');
+  const closeSheet=document.getElementById('closeSheet');
+  const openRelated=document.getElementById('openRelated');
+  const feedback={"h1": {"title": "Percepción personal sin respaldo", "text": "«hemos notado un gran aumento» necesita transformarse en una afirmación sostenida por evidencia. Este caso se trabaja en la ruta de Introducción y Lenguaje académico.", "lesson": 0}, "h2": {"title": "Afirmación teórica sin fuente", "text": "Aquí mencionan atención, autorregulación y lenguaje como habilidades fundamentales. La idea necesita una fuente que explique esos procesos y su relación con la primera infancia.", "lesson": 1}, "h3": {"title": "Dato informal sin función argumentativa", "text": "La búsqueda en foros puede servir para generar preguntas, pero no reemplaza evidencia académica. Además, deben explicar qué demuestra este dato.", "lesson": 2}, "h4": {"title": "Información acumulada sin función clara", "text": "La lista de caricaturas no explica qué permite comprender sobre el problema investigado. Este caso se conecta con la ruta Dato y evidencia.", "lesson": 2}, "h5": {"title": "Causalidad no demostrada", "text": "«son producidos por» afirma causalidad. Necesitan una fuente que lo demuestre o una formulación más cauta.", "lesson": 1}, "h6": {"title": "Dos afirmaciones distintas", "text": "El desplazamiento de actividades y los problemas de sueño son dos ideas distintas. Cada una necesita su propia evidencia.", "lesson": 1}, "h7": {"title": "Párrafo bien construido, pero mal ubicado", "text": "Este fragmento está bien construido porque incorpora evidencia y la interpreta. Funciona mejor si aparece antes, como parte de la contextualización del problema.", "lesson": 0}, "h8": {"title": "Lenguaje impreciso", "text": "«algo que está pasando realmente y de forma masiva» puede reemplazarse por una interpretación más precisa de los datos citados.", "lesson": 5}};
+  let current=0;
+  let relatedLesson=0;
+
+  function openScreen(i){
+    current=Math.max(0,Math.min(screens.length-1,i));
+    document.body.classList.add('screen-open');
+    app.classList.add('open');
+    screens.forEach((s,idx)=>s.style.display=idx===current?'block':'none');
+    chips.forEach((c,idx)=>c.classList.toggle('active',idx===current));
+    mini.textContent=current===screens.length-1?'Texto comentado':('Aprendizaje '+(current+1)+' de 7');
+    prev.disabled=current===0;
+    next.textContent=current===screens.length-1?'Volver a la ruta':'Siguiente →';
+    app.querySelector('.app-main').scrollTo({top:0,behavior:'instant'});
+  }
+  function closeApp(){
+    app.classList.remove('open');
+    document.body.classList.remove('screen-open');
+    closeFeedback();
+  }
+
+  homeButtons.forEach(b=>b.addEventListener('click',()=>openScreen(parseInt(b.dataset.openLesson))));
+  if(textButton) textButton.addEventListener('click',()=>openScreen(screens.length-1));
+  chips.forEach(c=>c.addEventListener('click',()=>openScreen(parseInt(c.dataset.screen))));
+  prev.addEventListener('click',()=>openScreen(current-1));
+  next.addEventListener('click',()=> current===screens.length-1 ? closeApp() : openScreen(current+1));
+  back.addEventListener('click',closeApp);
+
+  function openFeedback(id){
+    const f=feedback[id];
+    if(!f)return;
+    relatedLesson=f.lesson;
+    sheetTitle.textContent=f.title;
+    sheetText.textContent=f.text;
+    sheet.classList.add('open');
+    sheet.setAttribute('aria-hidden','false');
+  }
+  function closeFeedback(){
+    sheet.classList.remove('open');
+    sheet.setAttribute('aria-hidden','true');
+  }
+  document.querySelectorAll('.hl').forEach(el=>el.addEventListener('click',()=>openFeedback(el.dataset.feedback)));
+  closeSheet.addEventListener('click',closeFeedback);
+  openRelated.addEventListener('click',()=>{closeFeedback();openScreen(relatedLesson);});
+})();
+</script>
+</body>
+</html>
